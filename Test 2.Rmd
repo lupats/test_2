@@ -83,11 +83,66 @@ prejpathfit1 <- sem(pathm1, data = data)
 summary(prejpathfit1, fit.measures = T) 
 
 ```
-CFI and TLI are > .09 which shows that the model has a good fit, The model is  shows a good fit, looking at RMSEA 
+ 
+CFI and TLI are > .09 which shows that the model has a good fit, The model is  shows a good fit, not too sure about the RMSEA, p-value =Na, might need to compare to another model
+
+
 Now drawing model using package semPlot
 ```{r}
- ------------
-p_load(semPlot)
 semPlot::semPaths(prejpathfit1, what = "est", layout = "spring")
 ```
+Our model is telling us that self efficacy and mental wellness are predictors of risky behaviours with self-efficacy also predicting mental illness
+
+Defining path model 2
+
+```{r predicttree, mysize = TRUE, warning=FALSE,  size="\\scriptsize", fig.height=3}
+
+pathm2 <- '
+      risky_behaviour_scale ~ self_efficacy_scale + mental_wellness_scale
+      mental_wellness_scale ~ self_efficacy_scale + agency_scale
+      self_efficacy_scale ~  agency_scale 
+'    
+prejpathfit2 <- sem(pathm2, data = data)
+summary(prejpathfit2, fit.measures = T)   
+anova(prejpathfit2, prejpathfit1) #comparing this model to our first model
+```
+
+Now plotting this model
+```{r}
+semPlot::semPaths(prejpathfit2, what = "est", layout = "spring")
+```
+Let's take a closer look at the residuals as our new model as the AIC is higher than the first model's one and the RMSEA p-value is not significant
+```{r}
+      resid(prejpathfit2, type = "normalized")
+      modificationindices(prejpathfit2)
+
+```
+we can see correlation between the risky behaviour scale and the mental wellness and self-efficacy scales
+now lets respecify the model to allow correlations between the error terms in each scale 
+```{r}
+  
+  prejpathmodel2 <- '
+                # MEASUREMENT MODEL
+                  agency_scale =~ agency1 + agency2 + agency3 + agency4
+                  self_efficacy_scale =~ self_eff1 + self_eff2 + self_eff3 + self_eff4 + self_eff5 + self_eff6                   + self_eff7 + self_eff8
+                  mental_wellness_scale =~ sdq1 + sdq2 + sdq3 + sdq4 + sdq5
+                  risky_behaviour_scale =~ FRNSMKR5 + FRNALCR5 + YOUALCR5 + BEATEN + ARRSTDR5 + FRNGNGR5 +                      MEMGNGR5 + CRYWPNR5 + NUMPRTR5
+
+      
+                # STRUCTURAL MODEL
+                  risky_behaviour_scale ~ self_efficacy_scale + mental_wellness_scale
+                  mental_wellness_scale ~ self_efficacy_scale + agency_scale
+                  self_efficacy_scale ~  agency_scale 
+                  
+                # CORRELATED ERRORS
+                  risky_behaviour_scale	~~	mental_wellness_scale
+                  risky_behaviour_scale	~~	self_efficacy_scale
+      
+               '
+ prejpathfit2 <- sem(prejpathmodel2, data = data)
+      summary(prejpathfit2, fit.measures = T)
+
+```
+
+
 
