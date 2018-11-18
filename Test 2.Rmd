@@ -1,8 +1,8 @@
 ---
 title: "Test 2"
 output:
-  html_notebook: default
   pdf_document: default
+  html_notebook: default
 fontsize: 9pt
 ---
 
@@ -11,7 +11,7 @@ Loading the packages first
 ```{r setoptions, echo=TRUE }
 
 library(pacman)
-    p_load(tidyverse, lavaan, psych, knitr, lme4, lmerTest, multilevel, nlme, lattice, sjPlot, ggplot2,cowplot, magrittr, broom, Metrics, pbkrtest, mlmRev, influence.ME, gridExtra, semPlot)
+    p_load(tidyverse,dplyr, lavaan, psych, knitr, lme4, lmerTest, multilevel, nlme, lattice, sjPlot, ggplot2,cowplot, magrittr, broom, Metrics, pbkrtest, mlmRev, influence.ME, gridExtra, semPlot, plyr)
     
 ```
 Question 1 – Structural Equation Modeling
@@ -186,6 +186,25 @@ The summary is still the same as that of the previous model, now let's see the d
 ```{r}
 semPlot::semPaths(prejpathfit4, what = "est", layout = "spring")
 ```
-We can now see that the risky behaviour scale is now icluded in the relationship tree
+We can now see that the risky behaviour scale is now icluded in the relationship tree. The model shows that agency is a predictor of both self-efficacy and mental wellnenss, and mental illness is in tern a predictor of risky behaviour
 
+
+                                Question 2
+2.1
+Loading datasets
+```{r}
+ethp  <- load("YL_June2017_Ethiopiadata_2017-09-08")
+india <- load("YL_June2017_Indiadata_2017-11-22")
+peru  <- load("YL_June2017_perudata_2017-11-12")
+viet  <- load("YL_June2017_Vietnamdata_2017-11-01")
+```
+Now merging datasets
+
+```{r}
+remove(alldata)
+```
+```{r message = FALSE}
+mylist <- list( one=Ethiopia.dat, two=India.dat, three=peru.dat, four= Vietnam.dat )
+joined <- join_all( mylist, type="full" ) 
+```
 
