@@ -11,7 +11,7 @@ Loading the packages first
 ```{r setoptions, echo=TRUE, message=FALSE, warning=FALSE}
 
 library(pacman)
-    p_load(tidyverse,dplyr, lavaan, psych, knitr, lme4, lmerTest, multilevel, nlme, lattice, sjPlot, ggplot2,cowplot, magrittr, broom, Metrics, pbkrtest, mlmRev, influence.ME, gridExtra, semPlot, plyr, MiKTeX)
+    p_load(tidyverse,dplyr, lavaan, psych, knitr, lme4, lmerTest, multilevel, nlme, lattice, sjPlot, ggplot2,cowplot, magrittr, broom, Metrics, pbkrtest, mlmRev, influence.ME, gridExtra, semPlot, plyr, kableExtra, ICC, irr,  lapply )
     
 ```
                       
@@ -188,6 +188,10 @@ The summary is still the same as that of the previous model, now let's see the d
 semPlot::semPaths(prejpathfit4, what = "est", layout = "spring")
 ```
 We can now see that the risky behaviour scale is now icluded in the relationship tree. The model shows that agency is a predictor of both self-efficacy and mental wellnenss, and mental illness is in turn a predictor of risky behaviour
+```{r warning= FALSE}
+#COMPARE models 2 and 3
+    anova(prejpathfit2, prejpathfit3)
+```
 
 
                                 Question 2 Mixed-Effects Models
@@ -201,11 +205,142 @@ viet  <- load("YL_June2017_Vietnamdata_2017-11-01")
 ```
 Now merging datasets
 
-```{r}
-remove(alldata)
-```
+
 ```{r message = FALSE}
 mylist <- list( one=Ethiopia.dat, two=India.dat, three=peru.dat, four= Vietnam.dat )
 joined <- join_all( mylist, type="full" ) 
 ```
+2.1 Making new dataset with only the necessary variables
 
+First added the suggested variables then adding the other variables that were found to have a relationship with cognitive development in the articles (in this case measured through receptive vocan - ppvt), these include : parents education, stunting, type of preschool
+```{r message= FALSE, warning= FALSE} 
+newdata <- joined %>% 
+  dplyr::select(childid, ppvtraw, wi, round, agemon, sex, typesite, bmi, bwght, zhfa, caredu,stunt,preschool_type) %>% 
+  group_by(childid) %>% 
+ 
+ 
+```
+a Summary Statistics
+```{r}
+str(newdata,  na = "NaN") #we can see that some of our varibles need to be changed to factors
+
+```
+
+```{r}
+
+newdata$round  <-as.factor(newdata$round) 
+newdata$sex    <-  as.factor(newdata$sex) 
+newdata$preschool_type <- as.factor(newdata$preschool_type) 
+newdata$wi <- as.numeric(newdata$wi)
+
+```
+
+```{r message=FALSE, warning=FALSE}
+#now some descriptive stats grouping by stunting where 1 = stunted and 0 = no stunting
+newdata %>% 
+  dplyr:: select(-childid) %>% #this refused to work
+  describeBy(group = newdata$stunt, mat = T, na.rm = TRUE) #also missing values are stubborn
+  
+```
+We can see that the non-stunted children had higher receptive vocab scores than those who were stunted
+let's look at receptive vocab and wealth index
+
+```{r  message= FALSE, warning= FALSE}
+newdata %>% 
+  dplyr:: select(childid, round, ppvtraw, wi) %>% 
+  filter(round != 1) %>% 
+   ggplot(mapping = aes(x = wi, y = as.numeric(ppvtraw), group = round)) + 
+  geom_point(size = 0.5, alpha = 1) + 
+  geom_smooth(method = "lm") +
+  facet_wrap(~round) +
+  labs(title = "Relationship between wealth index and receptive vocabulary", 
+         subtitle = "Per round(2005, 2009, 2012, 2015)", 
+         x = "Wealth Index", y = "Receptive Vocabulary") +
+  theme_minimal()
+```
+We can see that the receptive vocab incereses as the children get older and also that those with lower wealth index have lower receptive vocab scores
+
+Let's expore the relationship between receptive vocab and parent education
+```{r message= FALSE, warning= FALSE}
+newdata %>% 
+  dplyr:: select(childid, round, ppvtraw, caredu) %>% 
+  filter(round != 1) %>% 
+   ggplot(mapping = aes(x = caredu, y = as.numeric(ppvtraw), group = round)) + 
+  geom_point(size = 0.5, alpha = 1) + 
+  geom_smooth(method = "lm") +
+  facet_wrap(~round) +
+  labs(title = "Relationship between parental education and receptive vocabulary", 
+         subtitle = "Per round(2005, 2009, 2012, 2015)", 
+         x = "Parent education", y = "Receptive Vocabulary") +
+  theme_minimal()
+```
+there isnt much of a relationship here
+
+Let's explore some more potential relationship graphically to see mixed effects
+
+```{r plot data, echo= FALSE, message=FALSE, warning=FALSE}
+
+ggplot(newdata, aes(x = as.factor(stunt), y = ppvtraw, 
+  fill = preschool_type, na.exclude)) +
+  geom_bar(position=position_dodge(), stat = 'identity') +
+  facet_grid(. ~ round)+
+  theme_bw(base_size = 14)+
+  xlab("Stunting (0 = no, 1 = yes")+
+  ylab("receptive vocab")
+```
+The missing values are messing with the analyses big time (- _ -)Can't continue with descriptive stats with thme behaving like this 
+
+b  Yes there is a need to include random effects to the model as the individuals sampled in the datasets are from  an infinite population of possible individuals, observations are nested within groups, it's repeated measures data
+c ICC
+
+```{r warning=FALSE, message= FALSE}
+ coeff <- ICC(newdata )
+  print(coeff)
+```
+
+3  Using the top-down approach, construct a mixed-effects model from your chosen variables.
+
+```{r  warning=FALSE, message= FALSE}
+#linear model
+ppvt_lm <- lm(ppvtraw ~ stunt + wi + sex, 
+              data = newdata, na.rm = TRUE)
+
+mse(predict(ppvt_lm), newdata$ppvtraw)
+
+
+```
+Inspect residuals
+
+```{r}
+#residual plot
+bwplot(childid ~ resid(ppvt_lm), newdata, 
+       xlab = "Residuals for linear model", ylab = "ppvtraw")
+```
+```{r echo=FALSE}
+
+
+#null model nlme
+ppvt_lme0_lmer <- lmer(ppvtraw ~1 + (1|round),
+data = newdata)
+mse(predict(math_lme0_lmer), newdata$ppvtraw)
+
+```
+```{r}
+ppvt_lme1 <- lmer(ppvtraw ~ wi + stunt + sex + (1|round),
+data = newdata)
+#compare AICs
+AIC(ppvt_lme1, ppvt_lm)
+```
+our new model's AIC is lower than the lm's so suggests better fit
+
+```{r}
+summary(ppvt_lme1)$coef
+```
+full model with lmer
+```{r}
+ppvt_lme2 <- lmer(ppvtraw ~ wi + stunt + sex + (wi|round), data = newdata)
+AIC(ppvt_lme2)
+```
+
+  the AIC of this newer model is lower
+`
