@@ -8,13 +8,14 @@ fontsize: 9pt
 
 
 Loading the packages first
-```{r setoptions, echo=TRUE }
+```{r setoptions, echo=TRUE, message=FALSE, warning=FALSE}
 
 library(pacman)
-    p_load(tidyverse,dplyr, lavaan, psych, knitr, lme4, lmerTest, multilevel, nlme, lattice, sjPlot, ggplot2,cowplot, magrittr, broom, Metrics, pbkrtest, mlmRev, influence.ME, gridExtra, semPlot, plyr)
+    p_load(tidyverse,dplyr, lavaan, psych, knitr, lme4, lmerTest, multilevel, nlme, lattice, sjPlot, ggplot2,cowplot, magrittr, broom, Metrics, pbkrtest, mlmRev, influence.ME, gridExtra, semPlot, plyr, MiKTeX)
     
 ```
-Question 1 – Structural Equation Modeling
+                      
+                      Question 1 – Structural Equation Modeling
 
 loading data
 ```{r loaddata, mysize = TRUE, message = FALSE, size="\\scriptsize"}
@@ -186,10 +187,10 @@ The summary is still the same as that of the previous model, now let's see the d
 ```{r}
 semPlot::semPaths(prejpathfit4, what = "est", layout = "spring")
 ```
-We can now see that the risky behaviour scale is now icluded in the relationship tree. The model shows that agency is a predictor of both self-efficacy and mental wellnenss, and mental illness is in tern a predictor of risky behaviour
+We can now see that the risky behaviour scale is now icluded in the relationship tree. The model shows that agency is a predictor of both self-efficacy and mental wellnenss, and mental illness is in turn a predictor of risky behaviour
 
 
-                                Question 2
+                                Question 2 Mixed-Effects Models
 2.1
 Loading datasets
 ```{r}
