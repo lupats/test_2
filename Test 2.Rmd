@@ -79,6 +79,7 @@ pathm1 <- '
       mental_wellness_scale ~ self_efficacy_scale
 
 '
+#Fitting and summarising the model
 prejpathfit1 <- sem(pathm1, data = data)
 summary(prejpathfit1, fit.measures = T) 
 
@@ -101,10 +102,15 @@ pathm2 <- '
       risky_behaviour_scale ~ self_efficacy_scale + mental_wellness_scale
       mental_wellness_scale ~ self_efficacy_scale + agency_scale
       self_efficacy_scale ~  agency_scale 
-'    
+
+'  
+
+#Fitting and summarising model
 prejpathfit2 <- sem(pathm2, data = data)
-summary(prejpathfit2, fit.measures = T)   
-anova(prejpathfit2, prejpathfit1) #comparing this model to our first model
+summary(prejpathfit2, fit.measures = T) 
+
+#comparing this model to our first model
+anova(prejpathfit2, prejpathfit1) 
 ```
 
 Now plotting this model
@@ -119,7 +125,7 @@ Let's take a closer look at the residuals as our new model as the AIC is higher 
 ```
 we can see correlation between the risky behaviour scale and the mental wellness and self-efficacy scales
 now lets respecify the model to allow correlations between the error terms in each scale 
-```{r}
+```{r mysize = TRUE, warning=FALSE,  size="\\scriptsize"}
   
   prejpathmodel2 <- '
                 # MEASUREMENT MODEL
@@ -139,10 +145,47 @@ now lets respecify the model to allow correlations between the error terms in ea
                   risky_behaviour_scale	~~	self_efficacy_scale
       
                '
- prejpathfit2 <- sem(prejpathmodel2, data = data)
-      summary(prejpathfit2, fit.measures = T)
+#Fitting and summarising model
+ prejpathfit3 <- sem(prejpathmodel2, data = data)
+      summary(prejpathfit3, fit.measures = T)
 
 ```
+  Although the RMSEA, SRMR and AIC/BIC are suggestive of a better fitting model, the RMSEA p-value is 1???
 
+Now plotting this model
+
+```{r}
+
+semPlot::semPaths(prejpathfit3, what = "est", layout = "spring")
+```
+With the correlated errors we can see that the riscky behaviour scale is not linked to any of the other variables
+Let's see waht happens if the correlated errors are excluded
+```{r}
+prejpathmodel3 <- '
+                # MEASUREMENT MODEL
+                  agency_scale =~ agency1 + agency2 + agency3 + agency4
+                  self_efficacy_scale =~ self_eff1 + self_eff2 + self_eff3 + self_eff4 + self_eff5 + self_eff6                   + self_eff7 + self_eff8
+                  mental_wellness_scale =~ sdq1 + sdq2 + sdq3 + sdq4 + sdq5
+                  risky_behaviour_scale =~ FRNSMKR5 + FRNALCR5 + YOUALCR5 + BEATEN + ARRSTDR5 + FRNGNGR5 +                      MEMGNGR5 + CRYWPNR5 + NUMPRTR5
+
+      
+                # STRUCTURAL MODEL
+                  risky_behaviour_scale ~ self_efficacy_scale + mental_wellness_scale
+                  mental_wellness_scale ~ self_efficacy_scale + agency_scale
+                  self_efficacy_scale ~  agency_scale 
+                  
+               
+               '
+#Fitting and summarising model
+ prejpathfit4 <- sem(prejpathmodel3, data = data)
+      summary(prejpathfit4, fit.measures = T)
+
+```
+The summary is still the same as that of the previous model, now let's see the diagram
+
+```{r}
+semPlot::semPaths(prejpathfit4, what = "est", layout = "spring")
+```
+We can now see that the risky behaviour scale is now icluded in the relationship tree
 
 
